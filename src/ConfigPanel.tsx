@@ -8,8 +8,20 @@ interface ConfigPanelProps {
   onChange: (config: PresetConfig) => void;
 }
 
+function RelativeChange({ ratio }: { ratio: number }) {
+  const pct = Math.round(Math.abs(1 - ratio) * 100);
+  const direction = ratio <= 1 ? "decrease" : "increase";
+  return (
+    <span className="pct-note">
+      ({pct}% relative {direction} to today)
+    </span>
+  );
+}
+
 export function ConfigPanel({ label, color, config, onChange }: ConfigPanelProps) {
-  const toggle = (key: "removeIVKSync" | "lowerSaplingBandwidth" | "zip231MemoBundles") => {
+  const blockTimeSpeedup = config.useCustomBlockInterval ? 75 / config.customBlockIntervalS : 1;
+
+  const toggle = (key: "removeIVKSync" | "lowerSaplingBandwidth" | "zip231MemoBundles" | "includeZSA") => {
     onChange({ ...config, [key]: !config[key] });
   };
 
@@ -54,7 +66,10 @@ export function ConfigPanel({ label, color, config, onChange }: ConfigPanelProps
             checked={config.lowerSaplingBandwidth}
             onChange={() => toggle("lowerSaplingBandwidth")}
           />
-          Lower Sapling bandwidth by 70%
+          Sapling effective block size 333kb/block{" "}
+          {config.lowerSaplingBandwidth && (
+            <RelativeChange ratio={333 / 2000 * blockTimeSpeedup} />
+          )}
         </label>
 
         <label>
@@ -66,25 +81,46 @@ export function ConfigPanel({ label, color, config, onChange }: ConfigPanelProps
           ZIP-231 memo bundles
         </label>
 
+        <label className="has-tooltip">
+          <input
+            type="checkbox"
+            checked={config.includeZSA}
+            onChange={() => toggle("includeZSA")}
+          />
+          Include ZSA
+          <span className="config-tooltip">Adds a 32-byte AssetBase to the note plaintext (and therefore shielded sync)</span>
+        </label>
+
         <div className="block-size-control">
-          <label>
+          <label className="has-tooltip">
             <input
               type="checkbox"
               checked={config.useCustomBlockSize}
               onChange={() => onChange({ ...config, useCustomBlockSize: !config.useCustomBlockSize })}
             />
-            Orchard applicable block size
+            Limit Orchard blockspace
+            <span className="config-tooltip">
+              Computes an action limit from the number of<br />
+              2-action txs that could be packed in this block size.<br /><br />
+              Enforced in protocol via a limit on the number<br />
+              of actions per block.<br /><br />
+              This lowers the spread between sandblast and<br />
+              regular tx usage.
+            </span>
           </label>
           <select
             className="block-size-select"
-            value={config.customBlockSizeMB}
+            value={config.customOrchardBlockSizeMB}
             disabled={!config.useCustomBlockSize}
-            onChange={(e) => onChange({ ...config, customBlockSizeMB: Number(e.target.value) })}
+            onChange={(e) => onChange({ ...config, customOrchardBlockSizeMB: Number(e.target.value) })}
           >
             {BLOCK_SIZE_OPTIONS.map((mb) => (
               <option key={mb} value={mb}>{mb} MB</option>
             ))}
           </select>
+          {config.useCustomBlockSize && (
+            <RelativeChange ratio={(config.customOrchardBlockSizeMB * 1000) / 2000 * blockTimeSpeedup} />
+          )}
         </div>
       </div>
     </div>

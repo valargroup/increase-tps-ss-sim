@@ -26,7 +26,7 @@ export function computeBandwidthMBPerDay(config: PresetConfig): number {
   }
 
   if (config.lowerSaplingBandwidth) {
-    base *= 0.3;
+    base *= 0.2;
   }
 
   return Math.round(base * 100) / 100;
@@ -53,7 +53,7 @@ export function computeTrialDecryptsPerDay(config: PresetConfig): number {
   }
 
   if (config.lowerSaplingBandwidth) {
-    base *= 0.3;
+    base *= 0.2;
   }
 
   return Math.round(base);

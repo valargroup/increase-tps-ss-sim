@@ -22,13 +22,15 @@ export interface PresetConfig {
   lowerSaplingBandwidth: boolean;
   /** ZIP-231 memo bundle */
   zip231MemoBundles: boolean;
-  /** Whether to use a custom block size (MB) instead of the default ~2MB */
+  /** Include ZSA (adds 32-byte AssetBase per action) */
+  includeZSA: boolean;
+  /** Whether to limit orchard blockspace */
   useCustomBlockSize: boolean;
   /** Custom block size in MB (only used when useCustomBlockSize is true) */
-  customBlockSizeMB: number;
+  customOrchardBlockSizeMB: number;
 }
 
-export const BLOCK_SIZE_OPTIONS = [2, 1.9, 1.75, 1.5] as const;
+export const BLOCK_SIZE_OPTIONS = [2, 1.9, 1.75, 1.5, 1.4, 1.33, 1] as const;
 export const BLOCK_INTERVAL_OPTIONS = [20, 25, 27.5, 30, 35, 37.5] as const;
 
 export const PRESET_TODAY: PresetConfig = {
@@ -40,8 +42,9 @@ export const PRESET_TODAY: PresetConfig = {
   customBlockIntervalS: 25,
   lowerSaplingBandwidth: false,
   zip231MemoBundles: false,
+  includeZSA: false,
   useCustomBlockSize: false,
-  customBlockSizeMB: 2,
+  customOrchardBlockSizeMB: 2,
 };
 
 export const PRESET_PROPOSED: PresetConfig = {
@@ -52,6 +55,7 @@ export const PRESET_PROPOSED: PresetConfig = {
   useCustomBlockInterval: true,
   customBlockIntervalS: 25,
   lowerSaplingBandwidth: true,
-  useCustomBlockSize: false,
-  customBlockSizeMB: 2,
+  includeZSA: false,
+  useCustomBlockSize: true,
+  customOrchardBlockSizeMB: 1.33,
 };
