@@ -19,7 +19,10 @@ export interface PresetConfig {
   useCustomBlockInterval: boolean;
   /** Custom block interval in seconds */
   customBlockIntervalS: number;
-  lowerSaplingBandwidth: boolean;
+  /** Whether to limit sapling inputs+outputs per block */
+  useSaplingIoLimit: boolean;
+  /** Max sapling inputs+outputs per block */
+  saplingIoLimit: number;
   /** ZIP-231 memo bundle */
   zip231MemoBundles: boolean;
   /** Include ZSA (adds 32-byte AssetBase per action) */
@@ -32,6 +35,9 @@ export interface PresetConfig {
 
 export const BLOCK_SIZE_OPTIONS = [2, 1.9, 1.75, 1.5, 1.4, 1.33, 1] as const;
 export const BLOCK_INTERVAL_OPTIONS = [20, 25, 27.5, 30, 35, 37.5] as const;
+/** Max sapling inputs+outputs per block at 2MB: floor(1998261 / 61033) * 65 */
+export const SAPLING_IO_MAX_TODAY = 2080;
+export const SAPLING_IO_OPTIONS = [2080, 1000, 390, 300, 250, 200] as const;
 
 export const PRESET_TODAY: PresetConfig = {
   label: "Today",
@@ -40,7 +46,8 @@ export const PRESET_TODAY: PresetConfig = {
   includeKeystone: false,
   useCustomBlockInterval: false,
   customBlockIntervalS: 25,
-  lowerSaplingBandwidth: false,
+  useSaplingIoLimit: false,
+  saplingIoLimit: 2080,
   zip231MemoBundles: false,
   includeZSA: false,
   useCustomBlockSize: false,
@@ -54,8 +61,9 @@ export const PRESET_PROPOSED: PresetConfig = {
   includeKeystone: false,
   useCustomBlockInterval: true,
   customBlockIntervalS: 25,
-  lowerSaplingBandwidth: true,
+  useSaplingIoLimit: true,
+  saplingIoLimit: 300,
   includeZSA: false,
   useCustomBlockSize: true,
-  customOrchardBlockSizeMB: 1.33,
+  customOrchardBlockSizeMB: 1.4,
 };

@@ -182,22 +182,24 @@ export interface SaplingResult {
 
 export function computeSapling(config: PresetConfig, shared: SharedResult): SaplingResult {
   // ── Effective block size ──────────────────────────────
-  // Sapling always uses default 2MB block size (custom block size is orchard-only)
-  const saplingEffectiveBlockSize = config.lowerSaplingBandwidth
-    ? 333_000
-    : DEFAULT_EFFECTIVE_BLOCK_SIZE;
+  // Sapling always uses default 2MB block size
+  const saplingEffectiveBlockSize = DEFAULT_EFFECTIVE_BLOCK_SIZE;
 
   // ── Spam transaction sizing ──────────────────────────
-  // Worst-case tx: 1 spend + 32 outputs + flat overhead
+  // Worst-case tx: 1 spend + 64 outputs + flat overhead
   const saplingSpamTxSize =
     SAPLING_SPEND_SIZE +
-    32 * SAPLING_OUTPUT_SIZE +
+    64 * SAPLING_OUTPUT_SIZE +
     SAPLING_FLAT_UNKNOWN;
 
   const saplingTxsPerBlock =
     saplingEffectiveBlockSize / saplingSpamTxSize;
 
-  const numOutputsPerBlock = Math.ceil(saplingTxsPerBlock * 32);
+  // Derived outputs, then constrain by IO limit if set
+  const derivedOutputsPerBlock = Math.ceil(saplingTxsPerBlock * 64);
+  const numOutputsPerBlock = config.useSaplingIoLimit
+    ? Math.min(derivedOutputsPerBlock, config.saplingIoLimit)
+    : derivedOutputsPerBlock;
 
   // ── Bandwidth per block ──────────────────────────────
   // Each tx contributes 32 bytes + 112 bytes per output

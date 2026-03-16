@@ -135,22 +135,24 @@ export function EquationBreakdown({ a, b }: EquationBreakdownProps) {
 
         <h4 className="eq-section-sapling">Sapling Derived</h4>
         <div className="eq-line">
-          <Var name="sapling_effective_block_size" value={sapling.saplingEffectiveBlockSize} unit="bytes" bold={d(sapling.saplingEffectiveBlockSize, r.sapling.saplingEffectiveBlockSize)} />{" "}
-          <B bold={d(sapling.saplingEffectiveBlockSize, r.sapling.saplingEffectiveBlockSize)}>
-            = {sapling.saplingEffectiveBlockSize === 333_000 ? "333,000 (checkbox)" : "effective_block_size"}
-          </B>
+          <Var name="sapling_effective_block_size" value={sapling.saplingEffectiveBlockSize} unit="bytes" />
+          {" "}= 2,000,000 − 1,739 (default 2 MB)
         </div>
         <div className="eq-line">
-          <Var name="sapling_spam_tx_size" value={sapling.saplingSpamTxSize} unit="bytes" bold={d(sapling.saplingSpamTxSize, r.sapling.saplingSpamTxSize)} />{" "}
-          = SAPLING_SPEND_SIZE + 32 × SAPLING_OUTPUT_SIZE + SAPLING_FLAT_UNKNOWN
+          <Var name="sapling_spam_tx_size" value={sapling.saplingSpamTxSize} unit="bytes" />{" "}
+          = SAPLING_SPEND_SIZE + 64 × SAPLING_OUTPUT_SIZE + SAPLING_FLAT_UNKNOWN
         </div>
         <div className="eq-line">
-          <Var name="sapling_txs_per_block" value={sapling.saplingTxsPerBlock} bold={d(sapling.saplingTxsPerBlock, r.sapling.saplingTxsPerBlock)} />{" "}
+          <Var name="sapling_txs_per_block" value={sapling.saplingTxsPerBlock} />{" "}
           = sapling_effective_block_size / sapling_spam_tx_size
         </div>
         <div className="eq-line">
           <Var name="sapling_outputs_per_block" value={sapling.numOutputsPerBlock} bold={d(sapling.numOutputsPerBlock, r.sapling.numOutputsPerBlock)} />{" "}
-          = ceil(sapling_txs_per_block × 32)
+          <B bold={d(sapling.numOutputsPerBlock, r.sapling.numOutputsPerBlock)}>
+            = {sapling.numOutputsPerBlock < Math.ceil(sapling.saplingTxsPerBlock * 64)
+              ? `min(ceil(txs × 64), ${sapling.numOutputsPerBlock}) (IO limit)`
+              : "ceil(sapling_txs_per_block × 64)"}
+          </B>
         </div>
         <div className="eq-line">
           <Var name="sapling_bw_per_block" value={sapling.bandwidthLoadPerBlock} unit="bytes" bold={d(sapling.bandwidthLoadPerBlock, r.sapling.bandwidthLoadPerBlock)} />{" "}

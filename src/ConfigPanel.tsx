@@ -1,5 +1,5 @@
 import type { PresetConfig } from "./types";
-import { BLOCK_SIZE_OPTIONS, BLOCK_INTERVAL_OPTIONS } from "./types";
+import { BLOCK_SIZE_OPTIONS, BLOCK_INTERVAL_OPTIONS, SAPLING_IO_OPTIONS, SAPLING_IO_MAX_TODAY } from "./types";
 
 interface ConfigPanelProps {
   label: string;
@@ -21,7 +21,7 @@ function RelativeChange({ ratio }: { ratio: number }) {
 export function ConfigPanel({ label, color, config, onChange }: ConfigPanelProps) {
   const blockTimeSpeedup = config.useCustomBlockInterval ? 75 / config.customBlockIntervalS : 1;
 
-  const toggle = (key: "removeIVKSync" | "lowerSaplingBandwidth" | "zip231MemoBundles" | "includeZSA") => {
+  const toggle = (key: "removeIVKSync" | "zip231MemoBundles" | "includeZSA") => {
     onChange({ ...config, [key]: !config[key] });
   };
 
@@ -60,17 +60,29 @@ export function ConfigPanel({ label, color, config, onChange }: ConfigPanelProps
           </select>
         </div>
 
-        <label>
-          <input
-            type="checkbox"
-            checked={config.lowerSaplingBandwidth}
-            onChange={() => toggle("lowerSaplingBandwidth")}
-          />
-          Sapling effective block size 333kb/block{" "}
-          {config.lowerSaplingBandwidth && (
-            <RelativeChange ratio={333 / 2000 * blockTimeSpeedup} />
+        <div className="block-size-control">
+          <label>
+            <input
+              type="checkbox"
+              checked={config.useSaplingIoLimit}
+              onChange={() => onChange({ ...config, useSaplingIoLimit: !config.useSaplingIoLimit })}
+            />
+            Sapling max inputs+outputs / block
+          </label>
+          <select
+            className="block-size-select"
+            value={config.saplingIoLimit}
+            disabled={!config.useSaplingIoLimit}
+            onChange={(e) => onChange({ ...config, saplingIoLimit: Number(e.target.value) })}
+          >
+            {SAPLING_IO_OPTIONS.map((v) => (
+              <option key={v} value={v}>{v}{v === SAPLING_IO_MAX_TODAY ? " (max today)" : ""}</option>
+            ))}
+          </select>
+          {config.useSaplingIoLimit && (
+            <RelativeChange ratio={config.saplingIoLimit / SAPLING_IO_MAX_TODAY * blockTimeSpeedup} />
           )}
-        </label>
+        </div>
 
         <label>
           <input

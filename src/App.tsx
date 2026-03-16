@@ -25,11 +25,10 @@ const COLOR_ORCHARD = "#34d399";
 function App() {
   const [configA, setConfigA] = useState<PresetConfig>({ ...PRESET_TODAY });
   const [configB, setConfigB] = useState<PresetConfig>({ ...PRESET_PROPOSED });
-  const [excludeSaplingAttack, setExcludeSaplingAttack] = useState(false);
   const [includeKeystone, setIncludeKeystone] = useState(false);
 
-  const effectiveA = { ...configA, excludeSaplingAttack, includeKeystone };
-  const effectiveB = { ...configB, excludeSaplingAttack, includeKeystone };
+  const effectiveA = { ...configA, excludeSaplingAttack: false, includeKeystone };
+  const effectiveB = { ...configB, excludeSaplingAttack: false, includeKeystone };
 
   const sharedA = computeShared(effectiveA);
   const sharedB = computeShared(effectiveB);
@@ -38,11 +37,10 @@ function App() {
   const orchardA = computeOrchard(effectiveA, sharedA);
   const orchardB = computeOrchard(effectiveB, sharedB);
 
-  // Zero out sapling if excluding sapling attack vector
-  const sapBwA = excludeSaplingAttack ? 0 : saplingA.rawBandwidthPerDay;
-  const sapBwB = excludeSaplingAttack ? 0 : saplingB.rawBandwidthPerDay;
-  const sapRawDecA = excludeSaplingAttack ? 0 : saplingA.rawDecryptsPerDay;
-  const sapRawDecB = excludeSaplingAttack ? 0 : saplingB.rawDecryptsPerDay;
+  const sapBwA = saplingA.rawBandwidthPerDay;
+  const sapBwB = saplingB.rawBandwidthPerDay;
+  const sapRawDecA = saplingA.rawDecryptsPerDay;
+  const sapRawDecB = saplingB.rawDecryptsPerDay;
 
   // Final bandwidth = max(sapling, orchard) raw + compact block headers
   const bandwidthA = (Math.max(sapBwA, orchardA.rawBandwidthPerDay) + sharedA.compactBlockHeaderBwPerDay) / 1_000_000;
@@ -101,14 +99,6 @@ function App() {
       </p>
 
       <div className="global-toggles">
-        <label>
-          <input
-            type="checkbox"
-            checked={excludeSaplingAttack}
-            onChange={() => setExcludeSaplingAttack(!excludeSaplingAttack)}
-          />
-          Exclude Sapling attack vector
-        </label>
         <label>
           <input
             type="checkbox"

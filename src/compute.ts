@@ -25,7 +25,7 @@ export function computeBandwidthMBPerDay(config: PresetConfig): number {
     base *= 0.9;
   }
 
-  if (config.lowerSaplingBandwidth) {
+  if (config.useSaplingIoLimit) {
     base *= 0.2;
   }
 
@@ -52,7 +52,7 @@ export function computeTrialDecryptsPerDay(config: PresetConfig): number {
     base *= 0.9;
   }
 
-  if (config.lowerSaplingBandwidth) {
+  if (config.useSaplingIoLimit) {
     base *= 0.2;
   }
 
