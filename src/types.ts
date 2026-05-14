@@ -23,17 +23,19 @@ export interface PresetConfig {
   useSaplingIoLimit: boolean;
   /** Max sapling inputs+outputs per block */
   saplingIoLimit: number;
-  /** ZIP-231 memo bundle */
-  zip231MemoBundles: boolean;
   /** Include ZSA (adds 32-byte AssetBase per action) */
   includeZSA: boolean;
-  /** Whether to limit orchard blockspace */
-  useCustomBlockSize: boolean;
-  /** Custom block size in MB (only used when useCustomBlockSize is true) */
-  customOrchardBlockSizeMB: number;
+  /** Whether to cap orchard actions per block */
+  useOrchardActionLimit: boolean;
+  /** Max orchard actions per block (only used when useOrchardActionLimit is true) */
+  customOrchardActionLimit: number;
 }
 
-export const BLOCK_SIZE_OPTIONS = [2, 1.9, 1.75, 1.5, 1.4, 1.33, 1] as const;
+export const ORCHARD_ACTION_LIMIT_OPTIONS = [450, 400, 350, 306, 250, 200, 150] as const;
+/** Today's max orchard actions per block (2-action txs in default 2 MB block) */
+export const ORCHARD_ACTIONS_TODAY = 438;
+/** Today's block interval in seconds */
+export const BLOCK_INTERVAL_TODAY = 75;
 export const BLOCK_INTERVAL_OPTIONS = [20, 25, 27.5, 30, 35, 37.5] as const;
 /** Max sapling inputs+outputs per block at 2MB: floor(1998261 / 61033) * 65 */
 export const SAPLING_IO_MAX_TODAY = 2080;
@@ -48,10 +50,9 @@ export const PRESET_TODAY: PresetConfig = {
   customBlockIntervalS: 25,
   useSaplingIoLimit: false,
   saplingIoLimit: 2080,
-  zip231MemoBundles: false,
   includeZSA: false,
-  useCustomBlockSize: false,
-  customOrchardBlockSizeMB: 2,
+  useOrchardActionLimit: false,
+  customOrchardActionLimit: 450,
 };
 
 export const PRESET_PROPOSED: PresetConfig = {
@@ -64,6 +65,6 @@ export const PRESET_PROPOSED: PresetConfig = {
   useSaplingIoLimit: true,
   saplingIoLimit: 300,
   includeZSA: false,
-  useCustomBlockSize: true,
-  customOrchardBlockSizeMB: 1.4,
+  useOrchardActionLimit: true,
+  customOrchardActionLimit: 306,
 };

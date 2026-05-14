@@ -1,5 +1,13 @@
 import type { PresetConfig } from "./types";
-import { BLOCK_SIZE_OPTIONS, BLOCK_INTERVAL_OPTIONS, SAPLING_IO_OPTIONS, SAPLING_IO_MAX_TODAY } from "./types";
+import {
+  ORCHARD_ACTION_LIMIT_OPTIONS,
+  ORCHARD_ACTIONS_TODAY,
+  BLOCK_INTERVAL_OPTIONS,
+  BLOCK_INTERVAL_TODAY,
+  SAPLING_IO_OPTIONS,
+  SAPLING_IO_MAX_TODAY,
+} from "./types";
+import { computeShared } from "./equations";
 
 interface ConfigPanelProps {
   label: string;
@@ -21,9 +29,21 @@ function RelativeChange({ ratio }: { ratio: number }) {
 export function ConfigPanel({ label, color, config, onChange }: ConfigPanelProps) {
   const blockTimeSpeedup = config.useCustomBlockInterval ? 75 / config.customBlockIntervalS : 1;
 
-  const toggle = (key: "removeIVKSync" | "zip231MemoBundles" | "includeZSA") => {
+  const toggle = (key: "removeIVKSync" | "includeZSA") => {
     onChange({ ...config, [key]: !config[key] });
   };
+
+  // Implied min orchard blockspace at the chosen action limit
+  // (orchard normal tx size depends on ZSA toggle)
+  const impliedOrchardMB = config.useOrchardActionLimit
+    ? ((config.customOrchardActionLimit / 2) * computeShared(config).orchardNormalTxSize + 1739) / 1_000_000
+    : 0;
+
+  // Actions/sec ratio vs today (438 actions / 75 s)
+  const blockTime = config.useCustomBlockInterval ? config.customBlockIntervalS : 75;
+  const orchardActionRatio = config.useOrchardActionLimit
+    ? (config.customOrchardActionLimit / blockTime) / (ORCHARD_ACTIONS_TODAY / BLOCK_INTERVAL_TODAY)
+    : 1;
 
   return (
     <div className="config-panel" style={{ borderColor: color }}>
@@ -84,15 +104,6 @@ export function ConfigPanel({ label, color, config, onChange }: ConfigPanelProps
           )}
         </div>
 
-        <label>
-          <input
-            type="checkbox"
-            checked={config.zip231MemoBundles}
-            onChange={() => toggle("zip231MemoBundles")}
-          />
-          ZIP-231 memo bundles
-        </label>
-
         <label className="has-tooltip">
           <input
             type="checkbox"
@@ -107,32 +118,37 @@ export function ConfigPanel({ label, color, config, onChange }: ConfigPanelProps
           <label className="has-tooltip">
             <input
               type="checkbox"
-              checked={config.useCustomBlockSize}
-              onChange={() => onChange({ ...config, useCustomBlockSize: !config.useCustomBlockSize })}
+              checked={config.useOrchardActionLimit}
+              onChange={() => onChange({ ...config, useOrchardActionLimit: !config.useOrchardActionLimit })}
             />
-            Limit Orchard blockspace
+            Limit Orchard actions per block
             <span className="config-tooltip">
-              Computes an action limit from the number of<br />
-              2-action txs that could be packed in this block size.<br /><br />
-              Enforced in protocol via a limit on the number<br />
-              of actions per block.<br /><br />
+              Caps the number of Orchard actions per block directly.<br /><br />
+              Equivalent to limiting Orchard blockspace to the minimum<br />
+              size that fits N/2 2-action txs.<br /><br />
               This lowers the spread between sandblast and<br />
               regular tx usage.
             </span>
           </label>
           <select
             className="block-size-select"
-            value={config.customOrchardBlockSizeMB}
-            disabled={!config.useCustomBlockSize}
-            onChange={(e) => onChange({ ...config, customOrchardBlockSizeMB: Number(e.target.value) })}
+            value={config.customOrchardActionLimit}
+            disabled={!config.useOrchardActionLimit}
+            onChange={(e) => onChange({ ...config, customOrchardActionLimit: Number(e.target.value) })}
           >
-            {BLOCK_SIZE_OPTIONS.map((mb) => (
-              <option key={mb} value={mb}>{mb} MB</option>
+            {ORCHARD_ACTION_LIMIT_OPTIONS.map((n) => (
+              <option key={n} value={n}>{n} actions</option>
             ))}
           </select>
-          {config.useCustomBlockSize && (
-            <RelativeChange ratio={(config.customOrchardBlockSizeMB * 1000) / 2000 * blockTimeSpeedup} />
-          )}
+          {config.useOrchardActionLimit && (() => {
+            const pct = Math.round(Math.abs(1 - orchardActionRatio) * 100);
+            const dir = orchardActionRatio <= 1 ? "decrease" : "increase";
+            return (
+              <span className="pct-note">
+                (≈ {impliedOrchardMB.toFixed(2)} MB max orchard blockspace; {pct}% relative {dir} in actions/s vs today)
+              </span>
+            );
+          })()}
         </div>
       </div>
     </div>

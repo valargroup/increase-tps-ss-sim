@@ -42,16 +42,6 @@ function App() {
   const sapRawDecA = saplingA.rawDecryptsPerDay;
   const sapRawDecB = saplingB.rawDecryptsPerDay;
 
-  // Final bandwidth = max(sapling, orchard) raw + compact block headers
-  const bandwidthA = (Math.max(sapBwA, orchardA.rawBandwidthPerDay) + sharedA.compactBlockHeaderBwPerDay) / 1_000_000;
-  const bandwidthB = (Math.max(sapBwB, orchardB.rawBandwidthPerDay) + sharedB.compactBlockHeaderBwPerDay) / 1_000_000;
-
-  // Final decrypts = max(sapling, orchard) raw × shared trial decrypt multiplier
-  const rawDecryptsA = Math.max(sapRawDecA, orchardA.rawDecryptsPerDay);
-  const rawDecryptsB = Math.max(sapRawDecB, orchardB.rawDecryptsPerDay);
-  const decryptsA = rawDecryptsA * sharedA.trialDecryptMultiplier;
-  const decryptsB = rawDecryptsB * sharedB.trialDecryptMultiplier;
-
   // Per-pool bandwidth in MB (including compact block headers)
   const headerMbA = sharedA.compactBlockHeaderBwPerDay / 1_000_000;
   const headerMbB = sharedB.compactBlockHeaderBwPerDay / 1_000_000;

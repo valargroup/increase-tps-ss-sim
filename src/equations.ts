@@ -19,13 +19,6 @@ const DEFAULT_EFFECTIVE_BLOCK_SIZE = 2_000_000 - 1739;
 /** Coinbase reserved bytes (subtracted from any block size) */
 const COINBASE_RESERVED = 1739;
 
-function effectiveBlockSize(config: PresetConfig): number {
-  if (config.useCustomBlockSize) {
-    return config.customOrchardBlockSizeMB * 1_000_000 - COINBASE_RESERVED;
-  }
-  return DEFAULT_EFFECTIVE_BLOCK_SIZE;
-}
-
 /** Compact block header size (bytes) */
 const COMPACT_BLOCK_HEADER_SIZE = 90;
 
@@ -77,19 +70,6 @@ const ORCHARD_ACTIONS_PER_SANDBLAST_TX = 32;
 const ORCHARD_BANDWIDTH_PER_ACTION = 148;
 
 // ─────────────────────────────────────────────────────────
-// ZIP-231 MEMO BUNDLE ADJUSTMENTS
-// ─────────────────────────────────────────────────────────
-
-/** ZIP-231: bandwidth per action increases by 48 bytes */
-const ZIP231_BANDWIDTH_PER_ACTION_DELTA = 48;
-
-/** ZIP-231: flat tx overhead increases by 512 bytes */
-const ZIP231_FLAT_DELTA = 512;
-
-/** ZIP-231: per-action size decreases by (512 - 48) bytes */
-const ZIP231_PER_ACTION_DELTA = -(512 - 48);
-
-// ─────────────────────────────────────────────────────────
 // ZSA ADJUSTMENTS
 // ─────────────────────────────────────────────────────────
 
@@ -121,9 +101,6 @@ export interface SharedResult {
  * Applied after max(sapling, orchard) in the final rollup.
  */
 export function computeShared(config: PresetConfig): SharedResult {
-  // ── Effective block size ─────────────────────────────
-  const ebs = effectiveBlockSize(config);
-
   // ── Block timing ─────────────────────────────────────
   const blockTime = config.useCustomBlockInterval ? config.customBlockIntervalS : 75; // seconds
   const numBlocksPerDay = Math.floor((24 * 60 * 60) / blockTime);
@@ -143,13 +120,24 @@ export function computeShared(config: PresetConfig): SharedResult {
     trialDecryptMultiplier *= 2;
   }
 
-  // ── Orchard TPS (2-action normal tx) ────────────────
-  const zip231 = config.zip231MemoBundles;
+  // ── Orchard 2-action normal tx size ─────────────────
   const zsa = config.includeZSA;
   const orchardNormalTxSize =
-    2 * (ORCHARD_PER_ACTION_SIZE + (zip231 ? ZIP231_PER_ACTION_DELTA : 0) + (zsa ? ZSA_PER_ACTION_DELTA : 0)) +
-    (ORCHARD_FLAT_SIZE + (zip231 ? ZIP231_FLAT_DELTA : 0));
-  const orchardTxsPerBlock = Math.floor(ebs / orchardNormalTxSize);
+    2 * (ORCHARD_PER_ACTION_SIZE + (zsa ? ZSA_PER_ACTION_DELTA : 0)) +
+    ORCHARD_FLAT_SIZE;
+
+  // ── Effective block size (orchard) ──────────────────
+  // When action-limited, this is the implied minimum blockspace
+  // needed to fit (customOrchardActionLimit / 2) normal txs.
+  let ebs: number;
+  let orchardTxsPerBlock: number;
+  if (config.useOrchardActionLimit) {
+    orchardTxsPerBlock = config.customOrchardActionLimit / 2;
+    ebs = orchardTxsPerBlock * orchardNormalTxSize + COINBASE_RESERVED;
+  } else {
+    ebs = DEFAULT_EFFECTIVE_BLOCK_SIZE;
+    orchardTxsPerBlock = Math.floor(ebs / orchardNormalTxSize);
+  }
   const orchardTps = orchardTxsPerBlock / blockTime;
 
   return {
@@ -240,23 +228,19 @@ export interface OrchardResult {
 }
 
 export function computeOrchard(config: PresetConfig, shared: SharedResult): OrchardResult {
-  // ── ZIP-231 & ZSA adjustments ──────────────────────
-  const zip231 = config.zip231MemoBundles;
+  // ── ZSA adjustments ──────────────────────
   const zsa = config.includeZSA;
   const orchardPerActionSize = ORCHARD_PER_ACTION_SIZE +
-    (zip231 ? ZIP231_PER_ACTION_DELTA : 0) +
     (zsa ? ZSA_PER_ACTION_DELTA : 0);
-  const orchardFlatSize = ORCHARD_FLAT_SIZE +
-    (zip231 ? ZIP231_FLAT_DELTA : 0);
+  const orchardFlatSize = ORCHARD_FLAT_SIZE;
   const orchardBandwidthPerAction = ORCHARD_BANDWIDTH_PER_ACTION +
-    (zip231 ? ZIP231_BANDWIDTH_PER_ACTION_DELTA : 0) +
     (zsa ? ZSA_BANDWIDTH_PER_ACTION_DELTA : 0);
 
   // ── Actions per block ───────────────────────────────
-  // When orchard blockspace is limited, derive from 2-action normal tx size.
+  // When action-limited, use the cap directly.
   // Otherwise, derive from 32-action sandblast spam txs (worst case).
-  const orchardActionsPerBlock = config.useCustomBlockSize
-    ? Math.floor(shared.effectiveBlockSize / shared.orchardNormalTxSize) * 2
+  const orchardActionsPerBlock = config.useOrchardActionLimit
+    ? config.customOrchardActionLimit
     : Math.ceil((shared.effectiveBlockSize / (ORCHARD_ACTIONS_PER_SANDBLAST_TX * orchardPerActionSize + orchardFlatSize)) * ORCHARD_ACTIONS_PER_SANDBLAST_TX);
 
   // ── Bandwidth per block ──────────────────────────────

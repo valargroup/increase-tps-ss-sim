@@ -86,7 +86,7 @@ export function EquationBreakdown({ a, b }: EquationBreakdownProps) {
           <B bold={d(shared.effectiveBlockSize, r.shared.effectiveBlockSize)}>
             = {shared.effectiveBlockSize === 2_000_000 - 1739
               ? "2,000,000 − 1,739 (default 2 MB)"
-              : `${((shared.effectiveBlockSize + 1739) / 1_000_000).toFixed(2)} MB − 1,739 (custom)`}
+              : `(actions / 2) × orchard_normal_tx_size + 1,739 ≈ ${(shared.effectiveBlockSize / 1_000_000).toFixed(2)} MB (action-limited)`}
           </B>
         </div>
         <div className="eq-line">
@@ -192,7 +192,7 @@ export function EquationBreakdown({ a, b }: EquationBreakdownProps) {
         <div className="eq-line">
           <Var name="ORCHARD_FLAT_SIZE" value={orchard.orchardFlatSize} unit="bytes" bold={d(orchard.orchardFlatSize, r.orchard.orchardFlatSize)} />{" "}
           <B bold={d(orchard.orchardFlatSize, r.orchard.orchardFlatSize)}>
-            = BINDING_SIG + FLAT_PROOF{orchard.orchardFlatSize !== 2784 && " + 512 (ZIP-231)"}
+            = BINDING_SIG + FLAT_PROOF
           </B>
         </div>
         <div className="eq-line">
@@ -207,7 +207,7 @@ export function EquationBreakdown({ a, b }: EquationBreakdownProps) {
           <Var name="orchard_actions_per_block" value={orchard.orchardActionsPerBlock} bold={d(orchard.orchardActionsPerBlock, r.orchard.orchardActionsPerBlock)} />{" "}
           <B bold={d(orchard.orchardActionsPerBlock, r.orchard.orchardActionsPerBlock)}>
             = {d(orchard.orchardActionsPerBlock, r.orchard.orchardActionsPerBlock)
-              ? "floor(effective_block_size / normal_tx_size) × 2 (action limit)"
+              ? "custom action limit"
               : "ceil(effective_block_size / spam_tx_size × 32)"}
           </B>
         </div>
