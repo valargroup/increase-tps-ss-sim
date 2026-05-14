@@ -82,14 +82,6 @@ export function EquationBreakdown({ a, b }: EquationBreakdownProps) {
 
         <h4>Shared Derived</h4>
         <div className="eq-line">
-          <Var name="effective_block_size" value={shared.effectiveBlockSize} unit="bytes" bold={d(shared.effectiveBlockSize, r.shared.effectiveBlockSize)} />{" "}
-          <B bold={d(shared.effectiveBlockSize, r.shared.effectiveBlockSize)}>
-            = {shared.effectiveBlockSize === 2_000_000 - 1739
-              ? "2,000,000 − 1,739 (default 2 MB)"
-              : `(actions / 2) × orchard_normal_tx_size + 1,739 ≈ ${(shared.effectiveBlockSize / 1_000_000).toFixed(2)} MB (action-limited)`}
-          </B>
-        </div>
-        <div className="eq-line">
           <Var name="block_time" value={shared.blockTime} unit="s" bold={d(shared.blockTime, r.shared.blockTime)} />{" "}
           <B bold={d(shared.blockTime, r.shared.blockTime)}>
             = {shared.blockTime === 75 ? "75s (default)" : `${shared.blockTime}s (custom)`}
@@ -106,7 +98,7 @@ export function EquationBreakdown({ a, b }: EquationBreakdownProps) {
         <div className="eq-line">
           <Var name="trial_decrypt_multiplier" value={shared.trialDecryptMultiplier} bold={d(shared.trialDecryptMultiplier, r.shared.trialDecryptMultiplier)} />{" "}
           <B bold={d(shared.trialDecryptMultiplier, r.shared.trialDecryptMultiplier)}>
-            = 2{shared.trialDecryptMultiplier !== 2 && " (adjusted by toggles)"}
+            = 2 (adjusted by toggles)
           </B>
         </div>
         <div className="eq-line eq-note">
@@ -122,7 +114,7 @@ export function EquationBreakdown({ a, b }: EquationBreakdownProps) {
         </div>
         <div className="eq-line">
           <Var name="orchard_tps" value={Math.round(shared.orchardTps * 100) / 100} unit="tx/s" bold={d(Math.round(shared.orchardTps * 100), Math.round(r.shared.orchardTps * 100))} />{" "}
-          = floor(effective_block_size / orchard_normal_tx_size) / block_time
+          = floor(orchard_effective_block_size / orchard_normal_tx_size) / block_time
         </div>
 
         {/* ── SAPLING ────────────────────────────────── */}
@@ -204,11 +196,19 @@ export function EquationBreakdown({ a, b }: EquationBreakdownProps) {
 
         <h4 className="eq-section-orchard">Orchard Derived</h4>
         <div className="eq-line">
+          <Var name="orchard_effective_block_size" value={shared.effectiveBlockSize} unit="bytes" bold={d(shared.effectiveBlockSize, r.shared.effectiveBlockSize)} />{" "}
+          <B bold={d(shared.effectiveBlockSize, r.shared.effectiveBlockSize)}>
+            = {shared.effectiveBlockSize === 2_000_000 - 1739
+              ? "2,000,000 − 1,739 (default 2 MB)"
+              : `(actions / 2) × orchard_normal_tx_size ≈ ${(shared.effectiveBlockSize / 1_000_000).toFixed(2)} MB (action-limited)`}
+          </B>
+        </div>
+        <div className="eq-line">
           <Var name="orchard_actions_per_block" value={orchard.orchardActionsPerBlock} bold={d(orchard.orchardActionsPerBlock, r.orchard.orchardActionsPerBlock)} />{" "}
           <B bold={d(orchard.orchardActionsPerBlock, r.orchard.orchardActionsPerBlock)}>
             = {d(orchard.orchardActionsPerBlock, r.orchard.orchardActionsPerBlock)
               ? "custom action limit"
-              : "ceil(effective_block_size / spam_tx_size × 32)"}
+              : "ceil(orchard_effective_block_size / spam_tx_size × 32)"}
           </B>
         </div>
         <div className="eq-line">

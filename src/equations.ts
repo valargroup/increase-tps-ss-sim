@@ -13,11 +13,8 @@ import type { PresetConfig } from "./types";
 // SHARED CONSTANTS
 // ─────────────────────────────────────────────────────────
 
-/** Default max block size minus coinbase reserved bytes */
+/** Default max block size minus coinbase reserved bytes (1,739) */
 const DEFAULT_EFFECTIVE_BLOCK_SIZE = 2_000_000 - 1739;
-
-/** Coinbase reserved bytes (subtracted from any block size) */
-const COINBASE_RESERVED = 1739;
 
 /** Compact block header size (bytes) */
 const COMPACT_BLOCK_HEADER_SIZE = 90;
@@ -133,7 +130,7 @@ export function computeShared(config: PresetConfig): SharedResult {
   let orchardTxsPerBlock: number;
   if (config.useOrchardActionLimit) {
     orchardTxsPerBlock = config.customOrchardActionLimit / 2;
-    ebs = orchardTxsPerBlock * orchardNormalTxSize + COINBASE_RESERVED;
+    ebs = orchardTxsPerBlock * orchardNormalTxSize;
   } else {
     ebs = DEFAULT_EFFECTIVE_BLOCK_SIZE;
     orchardTxsPerBlock = Math.floor(ebs / orchardNormalTxSize);

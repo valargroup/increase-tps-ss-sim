@@ -26,9 +26,11 @@ function App() {
   const [configA, setConfigA] = useState<PresetConfig>({ ...PRESET_TODAY });
   const [configB, setConfigB] = useState<PresetConfig>({ ...PRESET_PROPOSED });
   const [includeKeystone, setIncludeKeystone] = useState(false);
+  const [removeIVKSync, setRemoveIVKSync] = useState(false);
+  const [includeZSA, setIncludeZSA] = useState(false);
 
-  const effectiveA = { ...configA, excludeSaplingAttack: false, includeKeystone };
-  const effectiveB = { ...configB, excludeSaplingAttack: false, includeKeystone };
+  const effectiveA = { ...configA, excludeSaplingAttack: false, includeKeystone, removeIVKSync, includeZSA };
+  const effectiveB = { ...configB, excludeSaplingAttack: false, includeKeystone, removeIVKSync, includeZSA };
 
   const sharedA = computeShared(effectiveA);
   const sharedB = computeShared(effectiveB);
@@ -87,17 +89,6 @@ function App() {
       <p className="subtitle">
         Compare shielded sync performance under different configurations
       </p>
-
-      <div className="global-toggles">
-        <label>
-          <input
-            type="checkbox"
-            checked={includeKeystone}
-            onChange={() => setIncludeKeystone(!includeKeystone)}
-          />
-          Include Keystone
-        </label>
-      </div>
 
       <div className="config-row">
         <ConfigPanel
@@ -180,6 +171,15 @@ function App() {
               </Bar>
             </BarChart>
           </ResponsiveContainer>
+          <label className="chart-toggle has-tooltip">
+            <input
+              type="checkbox"
+              checked={includeZSA}
+              onChange={() => setIncludeZSA(!includeZSA)}
+            />
+            Include ZSA
+            <span className="config-tooltip">Adds a 32-byte AssetBase to the note plaintext (and therefore shielded sync)</span>
+          </label>
         </div>
 
         <div className="chart-container">
@@ -226,6 +226,22 @@ function App() {
               </Bar>
             </BarChart>
           </ResponsiveContainer>
+          <label className="chart-toggle">
+            <input
+              type="checkbox"
+              checked={removeIVKSync}
+              onChange={() => setRemoveIVKSync(!removeIVKSync)}
+            />
+            Remove incoming view key shielded sync
+          </label>
+          <label className="chart-toggle">
+            <input
+              type="checkbox"
+              checked={includeKeystone}
+              onChange={() => setIncludeKeystone(!includeKeystone)}
+            />
+            Include keystone in incoming view key syncs
+          </label>
         </div>
       </div>
       <div className="eq-row">

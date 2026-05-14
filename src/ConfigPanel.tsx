@@ -19,19 +19,11 @@ interface ConfigPanelProps {
 function RelativeChange({ ratio }: { ratio: number }) {
   const pct = Math.round(Math.abs(1 - ratio) * 100);
   const direction = ratio <= 1 ? "decrease" : "increase";
-  return (
-    <span className="pct-note">
-      ({pct}% relative {direction} to today)
-    </span>
-  );
+  return <>({pct}% relative {direction} to today)</>;
 }
 
 export function ConfigPanel({ label, color, config, onChange }: ConfigPanelProps) {
   const blockTimeSpeedup = config.useCustomBlockInterval ? 75 / config.customBlockIntervalS : 1;
-
-  const toggle = (key: "removeIVKSync" | "includeZSA") => {
-    onChange({ ...config, [key]: !config[key] });
-  };
 
   // Implied min orchard blockspace at the chosen action limit
   // (orchard normal tx size depends on ZSA toggle)
@@ -50,15 +42,6 @@ export function ConfigPanel({ label, color, config, onChange }: ConfigPanelProps
       <h3 style={{ color }}>{label}</h3>
 
       <div className="toggles">
-        <label>
-          <input
-            type="checkbox"
-            checked={config.removeIVKSync}
-            onChange={() => toggle("removeIVKSync")}
-          />
-          Remove incoming view key shielded sync
-        </label>
-
         <div className="block-size-control">
           <label>
             <input
@@ -78,6 +61,7 @@ export function ConfigPanel({ label, color, config, onChange }: ConfigPanelProps
               <option key={s} value={s}>{s}s</option>
             ))}
           </select>
+          <span className="pct-note">{" "}</span>
         </div>
 
         <div className="block-size-control">
@@ -87,7 +71,7 @@ export function ConfigPanel({ label, color, config, onChange }: ConfigPanelProps
               checked={config.useSaplingIoLimit}
               onChange={() => onChange({ ...config, useSaplingIoLimit: !config.useSaplingIoLimit })}
             />
-            Sapling max inputs+outputs / block
+            Sapling input+output limit
           </label>
           <select
             className="block-size-select"
@@ -99,20 +83,12 @@ export function ConfigPanel({ label, color, config, onChange }: ConfigPanelProps
               <option key={v} value={v}>{v}{v === SAPLING_IO_MAX_TODAY ? " (max today)" : ""}</option>
             ))}
           </select>
-          {config.useSaplingIoLimit && (
-            <RelativeChange ratio={config.saplingIoLimit / SAPLING_IO_MAX_TODAY * blockTimeSpeedup} />
-          )}
+          <span className="pct-note">
+            {config.useSaplingIoLimit
+              ? <RelativeChange ratio={config.saplingIoLimit / SAPLING_IO_MAX_TODAY * blockTimeSpeedup} />
+              : " "}
+          </span>
         </div>
-
-        <label className="has-tooltip">
-          <input
-            type="checkbox"
-            checked={config.includeZSA}
-            onChange={() => toggle("includeZSA")}
-          />
-          Include ZSA
-          <span className="config-tooltip">Adds a 32-byte AssetBase to the note plaintext (and therefore shielded sync)</span>
-        </label>
 
         <div className="block-size-control">
           <label className="has-tooltip">
@@ -121,7 +97,7 @@ export function ConfigPanel({ label, color, config, onChange }: ConfigPanelProps
               checked={config.useOrchardActionLimit}
               onChange={() => onChange({ ...config, useOrchardActionLimit: !config.useOrchardActionLimit })}
             />
-            Limit Orchard actions per block
+            Orchard action limit
             <span className="config-tooltip">
               Caps the number of Orchard actions per block directly.<br /><br />
               Equivalent to limiting Orchard blockspace to the minimum<br />
@@ -140,15 +116,13 @@ export function ConfigPanel({ label, color, config, onChange }: ConfigPanelProps
               <option key={n} value={n}>{n} actions</option>
             ))}
           </select>
-          {config.useOrchardActionLimit && (() => {
-            const pct = Math.round(Math.abs(1 - orchardActionRatio) * 100);
-            const dir = orchardActionRatio <= 1 ? "decrease" : "increase";
-            return (
-              <span className="pct-note">
-                (≈ {impliedOrchardMB.toFixed(2)} MB max orchard blockspace; {pct}% relative {dir} in actions/s vs today)
-              </span>
-            );
-          })()}
+          <span className="pct-note">
+            {config.useOrchardActionLimit ? (() => {
+              const pct = Math.round(Math.abs(1 - orchardActionRatio) * 100);
+              const dir = orchardActionRatio <= 1 ? "decrease" : "increase";
+              return `(${pct}% relative ${dir} in actions/s; ≈ ${impliedOrchardMB.toFixed(2)} MB max orchard blockspace)`;
+            })() : " "}
+          </span>
         </div>
       </div>
     </div>
