@@ -31,7 +31,7 @@ export interface PresetConfig {
   customOrchardActionLimit: number;
 }
 
-export const ORCHARD_ACTION_LIMIT_OPTIONS = [450, 400, 350, 333, 325, 306, 250, 200, 150] as const;
+export const ORCHARD_ACTION_LIMIT_OPTIONS = [450, 400, 350, 333, 330, 325, 306, 250, 200, 150] as const;
 /** Today's max orchard actions per block (2-action txs in default 2 MB block) */
 export const ORCHARD_ACTIONS_TODAY = 438;
 /** Today's block interval in seconds */
@@ -66,5 +66,5 @@ export const PRESET_PROPOSED: PresetConfig = {
   saplingIoLimit: 300,
   includeZSA: false,
   useOrchardActionLimit: true,
-  customOrchardActionLimit: 306,
+  customOrchardActionLimit: 330,
 };
